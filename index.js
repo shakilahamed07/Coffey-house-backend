@@ -23,16 +23,51 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
-    const coffeeCollection = client.db("coffeeDB").collection("coffees")
+    const coffeeCollection = client.db("coffeeDB").collection("coffees");
+    const userCollection = client.db('coffeeDB').collection("users");
 
-    //* Create
+    //* Create user
+    app.post('/users', async (req, res)=>{
+      const userProfile = req.body;
+      const result = await userCollection.insertOne(userProfile);
+      res.send(result)
+    })
+
+    //* Read all user
+    app.get('/users', async (req, res)=>{
+      const result = await userCollection.find().toArray();
+      res.send(result)
+    })
+
+    //* Delete user
+    app.delete('/users/:id', async (req, res)=>{
+      const id = req.params.id;
+      const find = {_id: new ObjectId(id)};
+      const result = await userCollection.deleteOne(find);
+      res.send(result)
+    })
+
+    //* Update Login lastSignInTime
+    app.patch('/users', async (req, res)=>{
+      const {email, lastSignInTime} = req.body
+      const filter = {email:email};
+      const updateDoc = {
+        $set:{
+          lastSignInTime: lastSignInTime
+        }
+      }
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result)
+    })
+
+    //* Create coffee
     app.post('/coffees', async (req,res)=>{
       const newCoffee = req.body;
       const result = await coffeeCollection.insertOne(newCoffee)
       res.send(result)
     })
 
-    //* Read
+    //* Read coffee
     app.get('/coffees', async (req, res)=>{
       const result = await coffeeCollection.find().toArray();
       res.send(result);
@@ -45,7 +80,7 @@ async function run() {
       res.send(result);
     })
 
-    //* Delete 
+    //* Delete coffee
     app.delete('/coffees/:id', async (req, res)=>{
       const id = req.params.id;
       const query = {_id: new ObjectId(id)};
@@ -53,7 +88,7 @@ async function run() {
       res.send(result)
     })
 
-    //* Update
+    //* Update coffee
     app.put('/coffees/:id', async (req, res)=>{
       const id = req.params.id;
       const filter = {_id: new ObjectId(id)};
